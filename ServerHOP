@@ -15,4 +15,4 @@ local Server, Next; repeat
    Next = Servers.nextPageCursor
 until Server
 
-TPS:TeleportToPlaceInstance(_place,Server.id,game.Players.LocalPlayer)
+TPS:TeleportToPlaceInstance(_place,Server.id,game:GetService('Players').LocalPlayer)
