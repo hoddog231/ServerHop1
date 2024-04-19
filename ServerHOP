@@ -1,34 +1,18 @@
-local HttpService = game:GetService("HttpService")
-local Task = game:GetService("RunService").Heartbeat
+local Http = game:GetService("HttpService")
+local TPS = game:GetService("TeleportService")
+local Api = "https://games.roblox.com/v1/games/"
 
-local MinSlots = 2 -- How many player slots should be available in the server.
-local URL = ("https://games.roblox.com/v1/games/"..tostring(game.PlaceId).."/servers/Public?sortOrder=Asc&limit=100")
-
-local function request(url)
-    return game:HttpGet(url)
+local _place = game.PlaceId
+local _servers = Api.._place.."/servers/Public?sortOrder=Asc&limit=100"
+function ListServers(cursor)
+   local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
+   return Http:JSONDecode(Raw)
 end
 
-local ServerHop = function()
-    while true do
-        local List = request(URL)
-        List = HttpService:JSONDecode(List)
-        local AvailableServer = nil 
+local Server, Next; repeat
+   local Servers = ListServers(Next)
+   Server = Servers.data[1]
+   Next = Servers.nextPageCursor
+until Server
 
-        for _, Server in ipairs(List.data) do
-            if (Server.id ~= game.JobId) and (Server.playing < (Server.maxPlayers - MinSlots)) then 
-                AvailableServer = Server
-                break
-            end
-        end
-
-        if AvailableServer then
-            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, AvailableServer.id)
-            break
-        end
-
-        -- No available servers found, wait before checking again
-        Task:Wait(1) -- Adjust wait time as needed
-    end
-end
-
-ServerHop()
+TPS:TeleportToPlaceInstance(_place,Server.id,game.Players.LocalPlayer)
